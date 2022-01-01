@@ -1,13 +1,19 @@
-const { app, mongoose, vars } = require("./config");
+const { app, emailApp, mongoose, vars } = require("./config");
 
 // open mongoose connection
 mongoose.connect();
 
-// listen to requests
+// listen to requests (main server)
 app.listen(vars.port, () =>
   console.log(`Server started on port ${vars.port} (${vars.env})`)
 );
 
+// start email server
+emailApp.listen(vars.emailConfig.port, () =>
+  console.log(`Mailing Server started on port ${vars.emailConfig.port} (${vars.env})`)
+);
+
+// Handle unexpected errors
 process
   .on("unhandledRejection", (reason, p) => {
     console.error(reason, "Unhandled Rejection at Promise", p);
