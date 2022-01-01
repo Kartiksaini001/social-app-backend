@@ -34,11 +34,20 @@ const getUsers = async (req, res) => {
 
 const signup = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, email, password } = req.body;
 
-    // check if user with given email already exists
-    const existingUser = await User.findOne({ email });
+    // check if user with given username already exists
+    const existingUser = await User.findOne({ username });
     if (existingUser)
+      return res.status(400).json({
+        success: false,
+        message:
+          "User already exists with that username. Please login or choose a different username",
+      });
+
+    // check if user with given email already exists and the email is verified
+    const existingUserWithEmail = await User.findOne({ email });
+    if (existingUserWithEmail && existingUserWithEmail.email_verified)
       return res.status(400).json({
         success: false,
         message:
@@ -57,6 +66,7 @@ const signup = async (req, res) => {
 
     // create user with given details
     const newUser = await User.create({
+      username,
       email,
       hash,
     });
