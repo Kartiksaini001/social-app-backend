@@ -30,8 +30,7 @@ app.get("/ping", (req, res) => {
   res.sendStatus(200);
 });
 
-// app.use("/users", routes.userRoutes);
-// app.use("/login", routes.loginRoutes);
+app.use("/email", routes.emailRoutes);
 
 app.all("*", (req, res) => {
   res.sendStatus(404);
