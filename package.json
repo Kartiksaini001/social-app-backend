@@ -5,7 +5,7 @@
   "main": "./src/index.js",
   "scripts": {
     "dev": "nodemon index.js",
-    "start": "node index.js",
+    "start": "node ./src/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/Kartiksaini001/social-app-backend#readme",
   "dependencies": {
+    "axios": "^0.24.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
@@ -28,6 +29,7 @@
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.1.4",
     "nodemailer": "^6.7.2",
+    "validator": "^13.7.0",
     "xss-clean": "^0.1.1"
   },
   "devDependencies": {

@@ -1,9 +1,15 @@
 const User = require("../models/user");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const vars = require("../config/vars");
+const { sendVerificationEmail } = require("../helpers/email");
+const { validPassword } = require("../helpers/validate");
 
 const getUsers = async (req, res) => {
   try {
     let { page } = req.query;
     if (!page) page = 1;
+
     // response limit
     const LIMIT = 100;
     // Get the starting index of every page
@@ -26,4 +32,52 @@ const getUsers = async (req, res) => {
   }
 };
 
-module.exports = { getUsers };
+const signup = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // check if user with given email already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser)
+      return res.status(400).json({
+        success: false,
+        message:
+          "User already exists with that email. Please login or choose a different email",
+      });
+
+    // validate password
+    if (!validPassword(password))
+      return res.status(400).json({
+        success: false,
+        message: "Password must contain at least one letter and one number",
+      });
+
+    // hash the password
+    const hash = await bcrypt.hash(password, 12);
+
+    // create user with given details
+    const newUser = await User.create({
+      email,
+      hash,
+    });
+
+    // generate auth token
+    const verificationToken = jwt.sign({ id: newUser._id }, vars.jwtSecret, {
+      expiresIn: vars.jwtVerifyEmailExpirationInterval,
+    });
+
+    // send verification email
+    sendVerificationEmail(email, verificationToken);
+
+    res.status(201).json({
+      success: true,
+      message:
+        "New user created and verification mail is sent. Please verify your email to login",
+      user: newUser,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+module.exports = { getUsers, signup };

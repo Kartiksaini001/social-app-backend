@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+const axios = require("axios");
 const { emailConfig } = require("../config/vars");
 
 const createTransporter = () =>
@@ -10,4 +11,11 @@ const createTransporter = () =>
     },
   });
 
-module.exports = { createTransporter };
+const sendVerificationEmail = async (to, verificationToken) => {
+  await axios.post(`http://localhost:${emailConfig.port}/email/verify`, {
+    to,
+    verificationToken,
+  });
+};
+
+module.exports = { createTransporter, sendVerificationEmail };
