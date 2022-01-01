@@ -23,7 +23,6 @@ const verifyEmail = async (req, res) => {
       message: `Verification email sent successfully to: ${to}`,
     });
   } catch (error) {
-    console.log(error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
