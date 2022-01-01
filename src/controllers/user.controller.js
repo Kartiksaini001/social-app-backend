@@ -1,5 +1,7 @@
-const User = require("../models/user");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const User = require("../models/user");
+const { jwtSecret } = require("../config/vars");
 const { sendVerificationEmail } = require("../helpers/email");
 const { validPassword } = require("../helpers/validate");
 
@@ -163,6 +165,29 @@ const updateUser = async (req, res) => {
 
 const verifyEmail = async (req, res) => {
   try {
+    const token = req.params.token;
+    // decode the token to get userId
+    const decodedData = jwt.verify(token, jwtSecret);
+    // if id from token does not match
+    if (!decodedData?.id)
+      return res.status(400).json({ success: false, message: "Invalid Token" });
+
+    const existingUser = await User.findById(decodedData.id);
+    // if no user exists with given id
+    if (!existingUser)
+      return res.status(400).json({ success: false, message: "Invalid Token" });
+    else if (existingUser.email_verified)
+      // if email is already verified
+      return res
+        .status(400)
+        .json({ success: false, message: "Email already verified" });
+
+    // update the email_verified to true
+    await User.findByIdAndUpdate(decodedData.id, { email_verified: true });
+
+    res
+      .status(200)
+      .json({ success: true, message: "Email verified successfully" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

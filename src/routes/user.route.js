@@ -10,8 +10,8 @@ const { auth } = require("../middlewares/auth");
 
 router.get("/", getUsers);
 router.post("/signup", signup);
+router.get("/email_verify/:token", verifyEmail);
 router.get("/:id", auth, getUser);
 router.put("/:id", auth, updateUser);
-router.get("/email_verify/:token", auth, verifyEmail);
 
 module.exports = router;
