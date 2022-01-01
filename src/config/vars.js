@@ -7,9 +7,11 @@ module.exports = {
   env: process.env.NODE_ENV,
   port: process.env.PORT,
   jwtSecret: process.env.JWT_SECRET,
-  jwtExpirationInterval: process.env.JWT_EXPIRATION_MINUTES,
-  jwtResetPassExpirationInterval: process.env.JWT_RESET_PASSWORD_EXPIRATION_MINUTES,
-  jwtVerifyEmailExpirationInterval: process.env.JWT_VERIFY_EMAIL_EXPIRATION_MINUTES,
+  jwtExpirationInterval: process.env.JWT_EXPIRATION_INTERVAL,
+  jwtResetPassExpirationInterval:
+    process.env.JWT_RESET_PASSWORD_EXPIRATION_INTERVAL,
+  jwtVerifyEmailExpirationInterval:
+    process.env.JWT_VERIFY_EMAIL_EXPIRATION_INTERVAL,
   mongo: {
     uri: process.env.MONGO_URI,
   },
