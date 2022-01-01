@@ -101,8 +101,8 @@ const getUser = async (req, res) => {
         message: "Self data access successful",
         user: userData,
       });
-      else
-      // user requesting someone else's data
+    // user requesting someone else's data
+    else
       res.status(200).json({
         success: true,
         message: "User data access successful",
@@ -115,6 +115,47 @@ const getUser = async (req, res) => {
 
 const updateUser = async (req, res) => {
   try {
+    const userId = req.params.id;
+    const authUserId = req.userId;
+    const { name, username } = req.body;
+
+    // if user is requesting someone else's update
+    if (userId !== authUserId)
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized: User can only update its own data",
+      });
+
+    // fetch the user data
+    let newUserData = await User.findById(userId).select("+hash");
+    // add new/updated data
+    if (name) newUserData.name = name;
+
+    // if new username is provided, check if it's unique
+    if (username) {
+      // check if user with given username already exists
+      const existingUser = await User.findOne({ username });
+      if (existingUser)
+        return res.status(400).json({
+          success: false,
+          message:
+            "User already exists with that username. Please choose a different username",
+        });
+
+      // else set the new username
+      newUserData.username = username;
+    }
+
+    // update the user data
+    const userData = await User.findByIdAndUpdate(userId, newUserData, {
+      new: true,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "User data updated successfully",
+      user: userData,
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
