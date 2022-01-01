@@ -1,7 +1,5 @@
 const User = require("../models/user");
 const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const vars = require("../config/vars");
 const { sendVerificationEmail } = require("../helpers/email");
 const { validPassword } = require("../helpers/validate");
 
@@ -46,8 +44,11 @@ const signup = async (req, res) => {
       });
 
     // check if user with given email already exists and the email is verified
-    const existingUserWithEmail = await User.findOne({ email });
-    if (existingUserWithEmail && existingUserWithEmail.email_verified)
+    const existingVerifiedUser = await User.findOne({
+      $and: [{ email }, { email_verified: true }],
+    });
+    
+    if (existingVerifiedUser)
       return res.status(400).json({
         success: false,
         message:
@@ -71,13 +72,8 @@ const signup = async (req, res) => {
       hash,
     });
 
-    // generate auth token
-    const verificationToken = jwt.sign({ id: newUser._id }, vars.jwtSecret, {
-      expiresIn: vars.jwtVerifyEmailExpirationInterval,
-    });
-
     // send verification email
-    sendVerificationEmail(email, verificationToken);
+    sendVerificationEmail(newUser._id, email);
 
     res.status(201).json({
       success: true,
