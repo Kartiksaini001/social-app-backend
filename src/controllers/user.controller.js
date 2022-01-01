@@ -47,7 +47,7 @@ const signup = async (req, res) => {
     const existingVerifiedUser = await User.findOne({
       $and: [{ email }, { email_verified: true }],
     });
-    
+
     if (existingVerifiedUser)
       return res.status(400).json({
         success: false,
@@ -86,4 +86,45 @@ const signup = async (req, res) => {
   }
 };
 
-module.exports = { getUsers, signup };
+const getUser = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const authUserId = req.userId;
+
+    // fetch the user data
+    const userData = await User.findById(userId);
+
+    // if user is requesting his own data
+    if (userId === authUserId)
+      res.status(200).json({
+        success: true,
+        message: "Self data access successful",
+        user: userData,
+      });
+      else
+      // user requesting someone else's data
+      res.status(200).json({
+        success: true,
+        message: "User data access successful",
+        user: { username: userData.username },
+      });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const updateUser = async (req, res) => {
+  try {
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const verifyEmail = async (req, res) => {
+  try {
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+module.exports = { getUsers, signup, getUser, updateUser, verifyEmail };
