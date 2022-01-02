@@ -10,19 +10,47 @@ const { validPassword } = require("../helpers/validate");
 
 const getUsers = async (req, res) => {
   try {
-    let { page } = req.query;
+    let { username, email, page } = req.query;
     if (!page) page = 1;
 
     // response limit
     const LIMIT = 100;
     // Get the starting index of every page
     const startIndex = (Number(page) - 1) * LIMIT;
-    const totalUsers = await User.countDocuments({});
+    let searchQuery = {};
+    let usernameRegex = null;
+    let emailRegex = null;
 
-    const users = await User.find()
-      .sort({ _id: -1 })
-      .limit(LIMIT)
-      .skip(startIndex);
+    // make case insensitive regular expression for searching
+    if (username) usernameRegex = new RegExp(username, "i");
+    if (email) emailRegex = new RegExp(email, "i");
+
+    if (username && email) {
+      // search by both username and email
+      searchQuery.$or = [{ username: usernameRegex }, { email: emailRegex }];
+    } else if (username) {
+      // search by username only
+      searchQuery.username = usernameRegex;
+    } else if (email) {
+      // search by email only
+      searchQuery.email = emailRegex;
+    }
+
+    // count total number of users for the search query
+    totalUsers = await User.countDocuments(searchQuery);
+    let users = null;
+
+    // if query is not provided, fetch all users sorted by username
+    if (Object.keys(searchQuery).length == 0)
+      users = await User.find()
+        .sort({ username: 1 })
+        .limit(LIMIT)
+        .skip(startIndex);
+    // else fetch users as per query
+    else users = await User.find(searchQuery).limit(LIMIT).skip(startIndex);
+
+    // send only username and email
+    users = users.map(({ username, email }) => ({ username, email }));
 
     res.status(200).json({
       success: true,
