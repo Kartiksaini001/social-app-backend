@@ -1,6 +1,10 @@
 const router = require("express").Router();
-const { verifyEmail } = require("../controllers/email.controller");
+const {
+  verifyEmail,
+  verifyPassword,
+} = require("../controllers/email.controller");
 
-router.post("/verify", verifyEmail);
+router.post("/verify_email", verifyEmail);
+router.post("/verify_password", verifyPassword);
 
 module.exports = router;

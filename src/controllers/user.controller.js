@@ -2,7 +2,10 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 const { jwtSecret } = require("../config/vars");
-const { sendVerificationEmail } = require("../helpers/email");
+const {
+  sendVerificationEmail,
+  sendResetPasswordEmail,
+} = require("../helpers/email");
 const { validPassword } = require("../helpers/validate");
 
 const getUsers = async (req, res) => {
@@ -193,4 +196,72 @@ const verifyEmail = async (req, res) => {
   }
 };
 
-module.exports = { getUsers, signup, getUser, updateUser, verifyEmail };
+const forgotPassword = async (req, res) => {
+  try {
+    const { username } = req.body;
+
+    // check if user with given username exists
+    const existingUser = await User.findOne({ username });
+    if (!existingUser)
+      return res.status(404).json({
+        success: false,
+        message: "No user exists with that username.",
+      });
+
+    // send the email
+    sendResetPasswordEmail(existingUser._id, existingUser.email);
+
+    res
+      .status(200)
+      .json({ success: true, message: "Reset password email has been sent." });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const updatePassword = async (req, res) => {
+  try {
+    const token = req.params.token;
+    const newPassword = req.body.password;
+
+    // decode the token to get userId
+    const decodedData = jwt.verify(token, jwtSecret);
+    // if id from token does not match
+    if (!decodedData?.id)
+      return res.status(400).json({ success: false, message: "Invalid Token" });
+
+    const existingUser = await User.findById(decodedData.id);
+    // if no user exists with given id
+    if (!existingUser)
+      return res.status(400).json({ success: false, message: "Invalid Token" });
+
+    // validate new password
+    if (!validPassword(newPassword))
+      return res.status(400).json({
+        success: false,
+        message: "Password must contain at least one letter and one number",
+      });
+
+    // hash new password
+    const hash = await bcrypt.hash(newPassword, 12);
+
+    // update password
+    await User.findByIdAndUpdate(decodedData.id, { hash });
+
+    res
+      .status(200)
+      .json({ success: true, message: "Password updated successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+module.exports = {
+  getUsers,
+  signup,
+  getUser,
+  updateUser,
+  verifyEmail,
+  forgotPassword,
+  updatePassword,
+};

@@ -12,13 +12,6 @@ const createTransporter = () =>
     },
   });
 
-const toSendVerificationEmail = async (to, verificationToken) => {
-  await axios.post(`http://localhost:${vars.emailConfig.port}/email/verify`, {
-    to,
-    verificationToken,
-  });
-};
-
 const sendVerificationEmail = async (userId, email) => {
   // generate auth token
   const verificationToken = jwt.sign({ id: userId }, vars.jwtSecret, {
@@ -26,7 +19,33 @@ const sendVerificationEmail = async (userId, email) => {
   });
 
   // Send verification email
-  toSendVerificationEmail(email, verificationToken);
+  await axios.post(
+    `http://localhost:${vars.emailConfig.port}/email/verify_email`,
+    {
+      to: email,
+      verificationToken,
+    }
+  );
 };
 
-module.exports = { createTransporter, sendVerificationEmail };
+const sendResetPasswordEmail = async (userId, email) => {
+  // generate auth token
+  const verificationToken = jwt.sign({ id: userId }, vars.jwtSecret, {
+    expiresIn: vars.jwtResetPassExpirationInterval,
+  });
+
+  // Send email
+  await axios.post(
+    `http://localhost:${vars.emailConfig.port}/email/verify_password`,
+    {
+      to: email,
+      verificationToken,
+    }
+  );
+};
+
+module.exports = {
+  createTransporter,
+  sendVerificationEmail,
+  sendResetPasswordEmail,
+};
