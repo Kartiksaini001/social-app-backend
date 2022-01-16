@@ -4,6 +4,7 @@ const {
   getFriends,
   getFriendRequests,
   getFriendRequestsSent,
+  getBlockedUsers,
   signup,
   getUser,
   updateUser,
@@ -17,6 +18,7 @@ router.get("/", getUsers);
 router.get("/friends", auth, getFriends);
 router.get("/friends/requests", auth, getFriendRequests);
 router.get("/friends/requests/sent", auth, getFriendRequestsSent);
+router.get("/block", auth, getBlockedUsers);
 router.post("/signup", signup);
 router.post("/forgot_password", forgotPassword);
 router.post("/update_password/:token", updatePassword);

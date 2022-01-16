@@ -373,6 +373,31 @@ const getFriendRequestsSent = async (req, res) => {
   }
 };
 
+const getBlockedUsers = async (req, res) => {
+  try {
+    const page = req.params.page ? req.params.page : 1;
+    const limit = req.params.perPage ? req.params.perPage : 20;
+    const skip = limit * (page - 1);
+    const user = await User.findById(req.userId)
+      .populate({
+        path: "blockedUsers",
+        model: User,
+        select: "name username email profilePic college city",
+      })
+      .slice("blockedUsers", [skip, limit]);
+
+    res.status(200).json({
+      success: true,
+      message: "Blocked users list access successful",
+      data: user.blockedUsers,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Something Went Wrong..." });
+  }
+};
+
 module.exports = {
   getUsers,
   signup,
@@ -384,4 +409,5 @@ module.exports = {
   getFriends,
   getFriendRequests,
   getFriendRequestsSent,
+  getBlockedUsers,
 };
