@@ -18,6 +18,17 @@ const userSchema = mongoose.Schema(
       },
     },
     email_verified: { type: Boolean, default: false },
+    friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    friendRequestsSent: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    ],
+    friendRequestsReceived: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    ],
+    blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    profilePic: String,
+    college: String,
+    city: String,
   },
   {
     timestamps: true,

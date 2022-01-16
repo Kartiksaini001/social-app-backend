@@ -59,7 +59,9 @@ const getUsers = async (req, res) => {
       numberOfPages: Math.ceil(totalUsers / LIMIT),
     });
   } catch (error) {
-    res.status(404).json({ success: false, message: error.message });
+    res
+      .status(404)
+      .json({ success: false, message: "Something Went Wrong..." });
   }
 };
 
@@ -115,7 +117,9 @@ const signup = async (req, res) => {
       user: newUser,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Something Went Wrong..." });
   }
 };
 
@@ -142,7 +146,9 @@ const getUser = async (req, res) => {
         user: { username: userData.username },
       });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Something Went Wrong..." });
   }
 };
 
@@ -190,7 +196,9 @@ const updateUser = async (req, res) => {
       user: userData,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Something Went Wrong..." });
   }
 };
 
@@ -220,7 +228,9 @@ const verifyEmail = async (req, res) => {
       .status(200)
       .json({ success: true, message: "Email verified successfully" });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Something Went Wrong..." });
   }
 };
 
@@ -243,7 +253,9 @@ const forgotPassword = async (req, res) => {
       .status(200)
       .json({ success: true, message: "Reset password email has been sent." });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Something Went Wrong..." });
   }
 };
 
@@ -280,7 +292,34 @@ const updatePassword = async (req, res) => {
       .status(200)
       .json({ success: true, message: "Password updated successfully" });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Something Went Wrong..." });
+  }
+};
+
+const getFriends = async (req, res) => {
+  try {
+    const page = req.params.page ? req.params.page : 1;
+    const limit = req.params.perPage ? req.params.perPage : 20;
+    const skip = limit * (page - 1);
+    const user = await User.findById(req.userId)
+      .populate({
+        path: "friends",
+        model: User,
+        select: "name username email profilePic college city",
+      })
+      .slice("friends", [skip, limit]);
+
+    res.status(200).json({
+      success: true,
+      message: "Friends list access successful",
+      data: user.friends,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Something Went Wrong..." });
   }
 };
 
@@ -292,4 +331,5 @@ module.exports = {
   verifyEmail,
   forgotPassword,
   updatePassword,
+  getFriends,
 };

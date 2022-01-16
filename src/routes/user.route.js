@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const {
   getUsers,
+  getFriends,
   signup,
   getUser,
   updateUser,
@@ -11,6 +12,7 @@ const {
 const { auth } = require("../middlewares/auth");
 
 router.get("/", getUsers);
+router.get("/friends", auth, getFriends);
 router.post("/signup", signup);
 router.post("/forgot_password", forgotPassword);
 router.post("/update_password/:token", updatePassword);
