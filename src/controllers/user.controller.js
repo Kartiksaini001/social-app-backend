@@ -323,6 +323,56 @@ const getFriends = async (req, res) => {
   }
 };
 
+const getFriendRequests = async (req, res) => {
+  try {
+    const page = req.params.page ? req.params.page : 1;
+    const limit = req.params.perPage ? req.params.perPage : 20;
+    const skip = limit * (page - 1);
+    const user = await User.findById(req.userId)
+      .populate({
+        path: "friendRequests",
+        model: User,
+        select: "name username email profilePic college city",
+      })
+      .slice("friendRequests", [skip, limit]);
+
+    res.status(200).json({
+      success: true,
+      message: "Friend requests list access successful",
+      data: user.friendRequests,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Something Went Wrong..." });
+  }
+};
+
+const getFriendRequestsSent = async (req, res) => {
+  try {
+    const page = req.params.page ? req.params.page : 1;
+    const limit = req.params.perPage ? req.params.perPage : 20;
+    const skip = limit * (page - 1);
+    const user = await User.findById(req.userId)
+      .populate({
+        path: "friendRequestsSent",
+        model: User,
+        select: "name username email profilePic college city",
+      })
+      .slice("friendRequestsSent", [skip, limit]);
+
+    res.status(200).json({
+      success: true,
+      message: "Friend requests sent list access successful",
+      data: user.friendRequestsSent,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Something Went Wrong..." });
+  }
+};
+
 module.exports = {
   getUsers,
   signup,
@@ -332,4 +382,6 @@ module.exports = {
   forgotPassword,
   updatePassword,
   getFriends,
+  getFriendRequests,
+  getFriendRequestsSent,
 };
