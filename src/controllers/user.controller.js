@@ -1,5 +1,6 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 const User = require("../models/user");
 const { jwtSecret } = require("../config/vars");
 const {
@@ -7,7 +8,6 @@ const {
   sendResetPasswordEmail,
 } = require("../helpers/email");
 const { validPassword } = require("../helpers/validate");
-const { findByIdAndUpdate } = require("../models/user");
 
 const getUsers = async (req, res) => {
   try {
@@ -413,15 +413,15 @@ const sendFriendRequest = async (req, res) => {
 
     let user = await User.findById(userId);
     // check if that user is a friend already
-    if (user.friends.includes(friendId))
+    if (user.friends.includes(mongoose.Types.ObjectId(friendId)))
       return res
         .status(400)
         .json({ success: false, message: "User is already a friend" });
 
     // check if the user is not blocked
     if (
-      user.blockedUsers.includes(friendId) ||
-      friend.blockedUsers.includes(userId)
+      user.blockedUsers.includes(mongoose.Types.ObjectId(friendId)) ||
+      friend.blockedUsers.includes(mongoose.Types.ObjectId(userId))
     )
       return res.status(400).json({
         success: false,
@@ -429,19 +429,21 @@ const sendFriendRequest = async (req, res) => {
       });
 
     // check if the friendId is already present in pending requests
-    if (user.friendRequests.includes(friendId))
+    if (user.friendRequests.includes(mongoose.Types.ObjectId(friendId)))
       return res
         .status(400)
         .json({ success: false, message: "Friend request already present" });
 
     // check if friend request is sent already
-    if (user.friendRequestsSent.includes(friendId))
+    if (user.friendRequestsSent.includes(mongoose.Types.ObjectId(friendId)))
       return res
         .status(400)
         .json({ success: false, message: "Friend request already sent" });
 
-    user.friendRequestsSent.unshift(friendId);
-    friend.friendRequests.unshift(userId);
+    if (!user.friends.includes(mongoose.Types.ObjectId(friendId)))
+      user.friends.unshift(friendId);
+    if (!friend.friends.includes(mongoose.Types.ObjectId(userId)))
+      friend.friends.unshift(userId);
 
     await User.findByIdAndUpdate(userId, user);
     await User.findByIdAndUpdate(friendId, friend);
@@ -450,7 +452,83 @@ const sendFriendRequest = async (req, res) => {
       .status(200)
       .json({ success: true, message: "Friend request sent successfully" });
   } catch (error) {
-    console.log(error);
+    res
+      .status(500)
+      .json({ success: false, message: "Something Went Wrong..." });
+  }
+};
+
+const acceptFriendRequest = async (req, res) => {
+  try {
+    const friendId = req.params.friendId;
+    const userId = req.userId;
+
+    let user = await User.findById(userId);
+
+    // check if friendId is present in pending requests
+    if (!user.friendRequests.includes(mongoose.Types.ObjectId(friendId)))
+      return res.status(404).json({
+        success: false,
+        message: "No friend request from that user found",
+      });
+
+    let friend = await User.findById(friendId);
+
+    user.friendRequests = user.friendRequests.filter(
+      (id) => id.toString() !== friendId
+    );
+    friend.friendRequestsSent = friend.friendRequestsSent.filter(
+      (id) => id.toString() !== userId
+    );
+
+    if (!user.friends.includes(mongoose.Types.ObjectId(friendId)))
+      user.friends.unshift(friendId);
+    if (!friend.friends.includes(mongoose.Types.ObjectId(userId)))
+      friend.friends.unshift(userId);
+
+    await User.findByIdAndUpdate(userId, user);
+    await User.findByIdAndUpdate(friendId, friend);
+
+    res
+      .status(200)
+      .json({ success: true, message: "Friend request accepted successfully" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Something Went Wrong..." });
+  }
+};
+
+const rejectFriendRequest = async (req, res) => {
+  try {
+    const friendId = req.params.friendId;
+    const userId = req.userId;
+
+    let user = await User.findById(userId);
+
+    // check if friendId is present in pending requests
+    if (!user.friendRequests.includes(mongoose.Types.ObjectId(friendId)))
+      return res.status(404).json({
+        success: false,
+        message: "No friend request from that user found",
+      });
+
+    let friend = await User.findById(friendId);
+
+    user.friendRequests = user.friendRequests.filter(
+      (id) => id.toString() !== friendId
+    );
+    friend.friendRequestsSent = friend.friendRequestsSent.filter(
+      (id) => id.toString() !== userId
+    );
+
+    await User.findByIdAndUpdate(userId, user);
+    await User.findByIdAndUpdate(friendId, friend);
+
+    res
+      .status(200)
+      .json({ success: true, message: "Friend request rejected successfully" });
+  } catch (error) {
     res
       .status(500)
       .json({ success: false, message: "Something Went Wrong..." });
@@ -470,4 +548,6 @@ module.exports = {
   getFriendRequestsSent,
   getBlockedUsers,
   sendFriendRequest,
+  acceptFriendRequest,
+  rejectFriendRequest,
 };
