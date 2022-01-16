@@ -7,6 +7,7 @@ const {
   sendResetPasswordEmail,
 } = require("../helpers/email");
 const { validPassword } = require("../helpers/validate");
+const { findByIdAndUpdate } = require("../models/user");
 
 const getUsers = async (req, res) => {
   try {
@@ -398,6 +399,64 @@ const getBlockedUsers = async (req, res) => {
   }
 };
 
+const sendFriendRequest = async (req, res) => {
+  try {
+    const friendId = req.params.friendId;
+    const userId = req.userId;
+
+    let friend = await User.findById(friendId);
+    // check if friendId is valid
+    if (!friend || !friend.email_verified)
+      return res
+        .status(404)
+        .json({ success: false, message: "Invalid FriendId" });
+
+    let user = await User.findById(userId);
+    // check if that user is a friend already
+    if (user.friends.includes(friendId))
+      return res
+        .status(400)
+        .json({ success: false, message: "User is already a friend" });
+
+    // check if the user is not blocked
+    if (
+      user.blockedUsers.includes(friendId) ||
+      friend.blockedUsers.includes(userId)
+    )
+      return res.status(400).json({
+        success: false,
+        message: "Blocked user. Cannot send friend request",
+      });
+
+    // check if the friendId is already present in pending requests
+    if (user.friendRequests.includes(friendId))
+      return res
+        .status(400)
+        .json({ success: false, message: "Friend request already present" });
+
+    // check if friend request is sent already
+    if (user.friendRequestsSent.includes(friendId))
+      return res
+        .status(400)
+        .json({ success: false, message: "Friend request already sent" });
+
+    user.friendRequestsSent.unshift(friendId);
+    friend.friendRequests.unshift(userId);
+
+    await User.findByIdAndUpdate(userId, user);
+    await User.findByIdAndUpdate(friendId, friend);
+
+    res
+      .status(200)
+      .json({ success: true, message: "Friend request sent successfully" });
+  } catch (error) {
+    console.log(error);
+    res
+      .status(500)
+      .json({ success: false, message: "Something Went Wrong..." });
+  }
+};
+
 module.exports = {
   getUsers,
   signup,
@@ -410,4 +469,5 @@ module.exports = {
   getFriendRequests,
   getFriendRequestsSent,
   getBlockedUsers,
+  sendFriendRequest,
 };

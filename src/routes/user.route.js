@@ -3,6 +3,7 @@ const {
   getUsers,
   getFriends,
   getFriendRequests,
+  sendFriendRequest,
   getFriendRequestsSent,
   getBlockedUsers,
   signup,
@@ -17,6 +18,7 @@ const { auth } = require("../middlewares/auth");
 router.get("/", getUsers);
 router.get("/friends", auth, getFriends);
 router.get("/friends/requests", auth, getFriendRequests);
+router.post("/friends/request/:friendId", auth, sendFriendRequest);
 router.get("/friends/requests/sent", auth, getFriendRequestsSent);
 router.get("/block", auth, getBlockedUsers);
 router.post("/signup", signup);
