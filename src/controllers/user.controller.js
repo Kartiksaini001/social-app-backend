@@ -409,7 +409,7 @@ const sendFriendRequest = async (req, res) => {
     if (!friend || !friend.email_verified)
       return res
         .status(404)
-        .json({ success: false, message: "Invalid FriendId" });
+        .json({ success: false, message: "Invalid User id" });
 
     let user = await User.findById(userId);
     // check if that user is a friend already
@@ -535,6 +535,54 @@ const rejectFriendRequest = async (req, res) => {
   }
 };
 
+const blockUser = async (req, res) => {
+  try {
+    const blockUserId = req.params.blockUserId;
+    const userId = req.userId;
+
+    let blockUser = await User.findById(blockUserId);
+    // check if blockUserId is valid
+    if (!blockUser || !blockUser.email_verified)
+      return res
+        .status(404)
+        .json({ success: false, message: "Invalid User id" });
+
+    let user = await User.findById(userId);
+
+    user.friends = user.friends.filter((id) => id.toString() !== blockUserId);
+    user.friendRequests = user.friendRequests.filter(
+      (id) => id.toString() !== blockUserId
+    );
+    user.friendRequestsSent = user.friendRequestsSent.filter(
+      (id) => id.toString() !== blockUserId
+    );
+
+    if (!user.blockedUsers.includes(mongoose.Types.ObjectId(blockUserId)))
+      user.blockedUsers.unshift(blockUserId);
+
+    blockUser.friends = blockUser.friends.filter(
+      (id) => id.toString() !== userId
+    );
+    blockUser.friendRequests = blockUser.friendRequests.filter(
+      (id) => id.toString() !== userId
+    );
+    blockUser.friendRequestsSent = blockUser.friendRequestsSent.filter(
+      (id) => id.toString() !== userId
+    );
+
+    await User.findByIdAndUpdate(userId, user);
+    await User.findByIdAndUpdate(blockUserId, blockUser);
+
+    res
+      .status(200)
+      .json({ success: true, message: "User blocked successfully" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Something Went Wrong..." });
+  }
+};
+
 module.exports = {
   getUsers,
   signup,
@@ -550,4 +598,5 @@ module.exports = {
   sendFriendRequest,
   acceptFriendRequest,
   rejectFriendRequest,
+  blockUser,
 };

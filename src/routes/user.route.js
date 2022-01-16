@@ -8,6 +8,7 @@ const {
   rejectFriendRequest,
   getFriendRequestsSent,
   getBlockedUsers,
+  blockUser,
   signup,
   getUser,
   updateUser,
@@ -25,6 +26,7 @@ router.post("/friends/request/accept/:friendId", auth, acceptFriendRequest);
 router.post("/friends/request/reject/:friendId", auth, rejectFriendRequest);
 router.get("/friends/requests/sent", auth, getFriendRequestsSent);
 router.get("/block", auth, getBlockedUsers);
+router.post("/block/:blockUserId", auth, blockUser);
 router.post("/signup", signup);
 router.post("/forgot_password", forgotPassword);
 router.post("/update_password/:token", updatePassword);
