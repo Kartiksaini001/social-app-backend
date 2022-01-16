@@ -612,6 +612,69 @@ const removeFriend = async (req, res) => {
   }
 };
 
+const suggestFriends = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const user = await User.findById(userId).populate({
+      path: "friends",
+      model: User,
+      select: "friends",
+    });
+
+    let suggestedIds = new Set();
+    user.friends.map((friend) => {
+      friend.friends.map((fof) => {
+        console.log(fof.toString(), typeof fof.toString());
+        if (fof.toString() !== userId && !suggestedIds.has(fof.toString()))
+          suggestedIds.add(fof.toString());
+      });
+    });
+
+    let searchQuery = {};
+    let collegeRegex = null;
+    let cityRegex = null;
+    let college = user.college;
+    let city = user.city;
+
+    // make case insensitive regular expression for searching
+    if (college) collegeRegex = new RegExp(college, "i");
+    if (city) cityRegex = new RegExp(city, "i");
+
+    if (college && city) {
+      // search by both college and city
+      searchQuery.$or = [{ college: collegeRegex }, { city: cityRegex }];
+    } else if (college) {
+      // search by college only
+      searchQuery.college = collegeRegex;
+    } else if (city) {
+      // search by city only
+      searchQuery.city = cityRegex;
+    }
+
+    if (Object.keys(searchQuery).length != 0) {
+      const searchResults = await User.find(searchQuery).limit(100);
+      
+      searchResults?.map(({ _id }) => {
+        if (_id.toString() !== userId && !suggestedIds.has(_id.toString()))
+          suggestedIds.add(_id.toString());
+      });
+    }
+
+    let data = [];
+    suggestedIds.forEach((id) => data.push(id));
+
+    res.status(200).json({
+      success: true,
+      message: "Friend Suggestions",
+      data,
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Something Went Wrong..." });
+  }
+};
+
 module.exports = {
   getUsers,
   signup,
@@ -629,4 +692,5 @@ module.exports = {
   rejectFriendRequest,
   blockUser,
   removeFriend,
+  suggestFriends,
 };
