@@ -440,10 +440,8 @@ const sendFriendRequest = async (req, res) => {
         .status(400)
         .json({ success: false, message: "Friend request already sent" });
 
-    if (!user.friends.includes(mongoose.Types.ObjectId(friendId)))
-      user.friends.unshift(friendId);
-    if (!friend.friends.includes(mongoose.Types.ObjectId(userId)))
-      friend.friends.unshift(userId);
+    user.friendRequestsSent.unshift(friendId);
+    friend.friendRequests.unshift(userId);
 
     await User.findByIdAndUpdate(userId, user);
     await User.findByIdAndUpdate(friendId, friend);
@@ -583,6 +581,37 @@ const blockUser = async (req, res) => {
   }
 };
 
+const removeFriend = async (req, res) => {
+  try {
+    const friendId = req.params.friendId;
+    const userId = req.userId;
+
+    let friend = await User.findById(friendId);
+    // check if friendId is valid
+    if (!friend || !friend.email_verified)
+      return res
+        .status(404)
+        .json({ success: false, message: "Invalid User id" });
+
+    let user = await User.findById(userId);
+
+    user.friends = user.friends.filter((id) => id.toString() !== friendId);
+
+    friend.friends = friend.friends.filter((id) => id.toString() !== userId);
+
+    await User.findByIdAndUpdate(userId, user);
+    await User.findByIdAndUpdate(friendId, friend);
+
+    res
+      .status(200)
+      .json({ success: true, message: "Friend removed successfully" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Something Went Wrong..." });
+  }
+};
+
 module.exports = {
   getUsers,
   signup,
@@ -599,4 +628,5 @@ module.exports = {
   acceptFriendRequest,
   rejectFriendRequest,
   blockUser,
+  removeFriend,
 };

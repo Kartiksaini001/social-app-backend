@@ -2,6 +2,7 @@ const router = require("express").Router();
 const {
   getUsers,
   getFriends,
+  removeFriend,
   getFriendRequests,
   sendFriendRequest,
   acceptFriendRequest,
@@ -21,6 +22,7 @@ const { auth } = require("../middlewares/auth");
 router.get("/", getUsers);
 router.get("/friends", auth, getFriends);
 router.get("/friends/requests", auth, getFriendRequests);
+router.post("/friends/remove/:friendId", auth, removeFriend);
 router.post("/friends/request/:friendId", auth, sendFriendRequest);
 router.post("/friends/request/accept/:friendId", auth, acceptFriendRequest);
 router.post("/friends/request/reject/:friendId", auth, rejectFriendRequest);
