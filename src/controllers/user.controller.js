@@ -1,8 +1,9 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
+const axios = require("axios");
 const User = require("../models/user");
-const { jwtSecret } = require("../config/vars");
+const { jwtSecret, mediaPort } = require("../config/vars");
 const {
   sendVerificationEmail,
   sendResetPasswordEmail,
@@ -653,7 +654,7 @@ const suggestFriends = async (req, res) => {
 
     if (Object.keys(searchQuery).length != 0) {
       const searchResults = await User.find(searchQuery).limit(100);
-      
+
       searchResults?.map(({ _id }) => {
         if (_id.toString() !== userId && !suggestedIds.has(_id.toString()))
           suggestedIds.add(_id.toString());
@@ -668,6 +669,37 @@ const suggestFriends = async (req, res) => {
       message: "Friend Suggestions",
       data,
     });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Something Went Wrong..." });
+  }
+};
+
+const uploadProfilePic = async (req, res) => {
+  try {
+    const userId = req.userId;
+    if (!req.file)
+      return res
+        .status(400)
+        .json({ success: false, message: "No file selected" });
+
+    const uploadRes = await axios.post(
+      `http://localhost:${mediaPort}/media/upload`,
+      req.file
+    );
+
+    if (uploadRes.status == 500) return res.status(500).json(uploadRes);
+
+    let user = await User.findById(userId).select("profilePic cloudinaryId");
+    user.profilePic = uploadRes.data.data.secure_url;
+    user.cloudinaryId = uploadRes.data.data.public_id;
+
+    await User.findByIdAndUpdate(userId, user);
+
+    res
+      .status(200)
+      .json({ success: true, message: "Profile picture added successfully" });
   } catch (error) {
     res
       .status(500)
@@ -693,4 +725,5 @@ module.exports = {
   blockUser,
   removeFriend,
   suggestFriends,
+  uploadProfilePic,
 };

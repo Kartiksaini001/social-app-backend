@@ -11,6 +11,7 @@ const {
   getBlockedUsers,
   blockUser,
   suggestFriends,
+  uploadProfilePic,
   signup,
   getUser,
   updateUser,
@@ -19,6 +20,7 @@ const {
   updatePassword,
 } = require("../controllers/user.controller");
 const { auth } = require("../middlewares/auth");
+const upload = require("../config/multer");
 
 router.get("/", getUsers);
 router.get("/friends", auth, getFriends);
@@ -31,6 +33,7 @@ router.get("/friends/requests/sent", auth, getFriendRequestsSent);
 router.get("/block", auth, getBlockedUsers);
 router.post("/block/:blockUserId", auth, blockUser);
 router.get("/suggestions", auth, suggestFriends);
+router.post("/profile", auth, upload.single("image"), uploadProfilePic);
 router.post("/signup", signup);
 router.post("/forgot_password", forgotPassword);
 router.post("/update_password/:token", updatePassword);

@@ -4,7 +4,7 @@ const validator = require("validator");
 const userSchema = mongoose.Schema(
   {
     username: { type: String, required: true, unique: true, trim: true },
-    name: { type: String, trim: true },
+    name: { type: String, trim: true, default: null },
     hash: { type: String, required: true, select: false },
     email: {
       type: String,
@@ -22,9 +22,10 @@ const userSchema = mongoose.Schema(
     friendRequestsSent: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     friendRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-    profilePic: String,
-    college: String,
-    city: String,
+    profilePic: { type: String, default: null },
+    college: { type: String, default: null },
+    city: { type: String, default: null },
+    cloudinaryId: { type: String, default: null },
   },
   {
     timestamps: true,
