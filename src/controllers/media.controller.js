@@ -12,4 +12,16 @@ const uploadMedia = async (req, res) => {
   }
 };
 
-module.exports = { uploadMedia };
+const removeMedia = async (req, res) => {
+  try {
+    await cloudinary.uploader.destroy(req.params.id);
+
+    res.status(200).json({ success: true, message: "File deleted successfully" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Something Went Wrong..." });
+  }
+};
+
+module.exports = { uploadMedia, removeMedia };

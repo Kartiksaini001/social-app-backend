@@ -684,6 +684,15 @@ const uploadProfilePic = async (req, res) => {
         .status(400)
         .json({ success: false, message: "No file selected" });
 
+    let user = await User.findById(userId).select("profilePic cloudinaryId");
+    if (user.profilePic !== null) {
+      const removeRes = await axios.delete(
+        `http://localhost:${mediaPort}/media/remove/${user.cloudinaryId}`
+      );
+
+      if (removeRes.status == 500) return res.status(500).json(removeRes);
+    }
+
     const uploadRes = await axios.post(
       `http://localhost:${mediaPort}/media/upload`,
       req.file
@@ -691,7 +700,6 @@ const uploadProfilePic = async (req, res) => {
 
     if (uploadRes.status == 500) return res.status(500).json(uploadRes);
 
-    let user = await User.findById(userId).select("profilePic cloudinaryId");
     user.profilePic = uploadRes.data.data.secure_url;
     user.cloudinaryId = uploadRes.data.data.public_id;
 
@@ -700,6 +708,32 @@ const uploadProfilePic = async (req, res) => {
     res
       .status(200)
       .json({ success: true, message: "Profile picture added successfully" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Something Went Wrong..." });
+  }
+};
+
+const removeProfilePic = async (req, res) => {
+  try {
+    const userId = req.userId;
+    let user = await User.findById(userId).select("profilePic cloudinaryId");
+
+    const removeRes = await axios.delete(
+      `http://localhost:${mediaPort}/media/remove/${user.cloudinaryId}`
+    );
+
+    if (removeRes.status == 500) return res.status(500).json(removeRes);
+
+    user.profilePic = null;
+    user.cloudinaryId = null;
+
+    await User.findByIdAndUpdate(userId, user);
+
+    res
+      .status(200)
+      .json({ success: true, message: "Profile picture removed successfully" });
   } catch (error) {
     res
       .status(500)
@@ -726,4 +760,5 @@ module.exports = {
   removeFriend,
   suggestFriends,
   uploadProfilePic,
+  removeProfilePic,
 };
