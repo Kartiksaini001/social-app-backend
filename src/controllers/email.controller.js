@@ -23,7 +23,9 @@ const verifyEmail = async (req, res) => {
       message: `Verification email sent successfully to: ${to}`,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Something Went Wrong..." });
   }
 };
 
@@ -47,7 +49,9 @@ const verifyPassword = async (req, res) => {
       message: `Reset Password email sent successfully to: ${to}`,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res
+      .status(500)
+      .json({ success: false, message: "Something Went Wrong..." });
   }
 };
 

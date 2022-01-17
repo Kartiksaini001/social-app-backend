@@ -1,4 +1,4 @@
-const { app, emailApp, mongoose, vars } = require("./config");
+const { app, emailApp, mediaApp, mongoose, vars } = require("./config");
 
 // open mongoose connection
 mongoose.connect();
@@ -6,6 +6,11 @@ mongoose.connect();
 // listen to requests (main server)
 app.listen(vars.port, () =>
   console.log(`Server started on port ${vars.port} (${vars.env})`)
+);
+
+// start media server
+mediaApp.listen(vars.mediaPort, () =>
+  console.log(`Media Server started on port ${vars.mediaPort} (${vars.env})`)
 );
 
 // start email server

@@ -6,6 +6,7 @@ require("dotenv").config({ path: path.join(__dirname, "../../.env") });
 module.exports = {
   env: process.env.NODE_ENV,
   port: process.env.PORT,
+  mediaPort: process.env.MEDIA_PORT,
   jwtSecret: process.env.JWT_SECRET,
   jwtExpirationInterval: process.env.JWT_EXPIRATION_INTERVAL,
   jwtResetPassExpirationInterval:
@@ -21,5 +22,10 @@ module.exports = {
     username: process.env.EMAIL_USERNAME,
     password: process.env.EMAIL_PASSWORD,
     from: process.env.EMAIL_FROM,
+  },
+  cloudinaryConfig: {
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
   },
 };
