@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 const Post = require("../models/post");
 const Comment = require("../models/comment");
-const { findByIdAndUpdate } = require("../models/post");
 
 const fetchAllComments = async (req, res) => {
   try {
@@ -81,7 +80,28 @@ const createComment = async (req, res) => {
 
 const fetchComment = async (req, res) => {
   try {
-    // res.status(200).json({ success: true, message: "" });
+    const { postId, commentId } = req.params;
+
+    // validate postId
+    if (!mongoose.Types.ObjectId.isValid(postId))
+      return res
+        .status(404)
+        .json({ success: false, message: "Invalid post id" });
+
+    // validate commentId
+    if (!mongoose.Types.ObjectId.isValid(commentId))
+      return res
+        .status(404)
+        .json({ success: false, message: "Invalid comment id" });
+
+    // fetch the comment
+    const comment = await Comment.findById(commentId);
+
+    res.status(200).json({
+      success: true,
+      message: "Comment fetched successfully",
+      data: comment,
+    });
   } catch (error) {
     res
       .status(500)
@@ -91,7 +111,57 @@ const fetchComment = async (req, res) => {
 
 const updateComment = async (req, res) => {
   try {
-    // res.status(200).json({ success: true, message: "" });
+    const { postId, commentId } = req.params;
+
+    // validate postId
+    if (!mongoose.Types.ObjectId.isValid(postId))
+      return res
+        .status(404)
+        .json({ success: false, message: "Invalid post id" });
+
+    // validate commentId
+    if (!mongoose.Types.ObjectId.isValid(commentId))
+      return res
+        .status(404)
+        .json({ success: false, message: "Invalid comment id" });
+
+    const post = await Post.findById(postId);
+
+    // check if post contains comment with id commentId
+    if (!post.comments.includes(mongoose.Types.ObjectId(commentId)))
+      return res.status(404).json({
+        success: false,
+        message: "Comment with given id not found in that post",
+      });
+
+    const comment = await Comment.findById(commentId);
+
+    // check if current user is the author of that comment
+    if (comment.author.toString() !== req.userId)
+      return res.status(401).json({
+        success: false,
+        message: "Cannot update that comment",
+      });
+
+    const { content } = req.body;
+
+    if (!content)
+      return res
+        .status(400)
+        .json({ success: false, message: "Comment cannot be empty" });
+
+    // update the comment
+    const updatedComment = await Comment.findByIdAndUpdate(
+      commentId,
+      { content },
+      { new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "Comment updated successfully",
+      data: updatedComment,
+    });
   } catch (error) {
     res
       .status(500)
