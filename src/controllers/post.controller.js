@@ -37,7 +37,27 @@ const createPost = async (req, res) => {
 
 const fetchPost = async (req, res) => {
   try {
-    // res.status(200).json({ success: true, message: "" });
+    const { id } = req.params;
+
+    // validate postId
+    if (!mongoose.Types.ObjectId.isValid(id))
+      return res
+        .status(404)
+        .json({ success: false, message: "Invalid post id" });
+
+    const post = await Post.findById(id);
+
+    // if no post found
+    if (!post)
+      return res
+        .status(404)
+        .json({ success: false, message: "No post with given id" });
+
+    res.status(200).json({
+      success: true,
+      message: "Post fetched successfully",
+      data: post,
+    });
   } catch (error) {
     res
       .status(500)
