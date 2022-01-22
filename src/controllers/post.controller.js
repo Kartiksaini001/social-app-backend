@@ -27,7 +27,40 @@ const fetchAllPosts = async (req, res) => {
 
 const createPost = async (req, res) => {
   try {
-    // res.status(200).json({ success: true, message: "" });
+    const { caption } = req.body;
+
+    if (!req.file && !caption)
+      return res
+        .status(400)
+        .json({ success: false, message: "No data given for post" });
+
+    // create a post
+    const newPost = new Post({ creator: req.userId });
+
+    // add image url if provided
+    if (req.file) {
+      const uploadRes = await axios.post(
+        `http://localhost:${mediaPort}/media/upload`,
+        req.file
+      );
+
+      if (uploadRes.status == 500) return res.status(500).json(uploadRes);
+
+      newPost.imageUrl = uploadRes.data.data.secure_url;
+      newPost.cloudinaryId = uploadRes.data.data.public_id;
+    }
+
+    // add caption if provided
+    if (caption) newPost.caption = caption;
+
+    // save the post
+    await newPost.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Post created successfully",
+      data: newPost,
+    });
   } catch (error) {
     res
       .status(500)
