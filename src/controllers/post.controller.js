@@ -1,5 +1,7 @@
 const axios = require("axios");
 const Post = require("../models/post");
+const { mediaPort } = require("../config/vars");
+const Comment = require("../models/comment");
 
 const fetchAllPosts = async (req, res) => {
   try {
@@ -35,7 +37,7 @@ const createPost = async (req, res) => {
         .json({ success: false, message: "No data given for post" });
 
     // create a post
-    const newPost = new Post({ creator: req.userId });
+    let newPost = new Post({ creator: req.userId });
 
     // add image url if provided
     if (req.file) {
@@ -100,7 +102,66 @@ const fetchPost = async (req, res) => {
 
 const updatePost = async (req, res) => {
   try {
-    // res.status(200).json({ success: true, message: "" });
+    const { id } = req.params;
+
+    // validate postId
+    if (!mongoose.Types.ObjectId.isValid(id))
+      return res
+        .status(404)
+        .json({ success: false, message: "Invalid post id" });
+
+    let post = await Post.findById(id);
+
+    // if no post found
+    if (!post)
+      return res
+        .status(404)
+        .json({ success: false, message: "No post with given id" });
+
+    if (post.creator.toString() !== req.userId)
+      return res
+        .status(401)
+        .json({ success: false, message: "Cannot update this post" });
+
+    const { caption } = req.body;
+
+    if (!req.file && !caption)
+      return res
+        .status(400)
+        .json({ success: false, message: "No data given for post" });
+
+    // add image url if provided
+    if (req.file) {
+      if (post.imageUrl !== null) {
+        const removeRes = await axios.delete(
+          `http://localhost:${mediaPort}/media/remove/${post.cloudinaryId}`
+        );
+
+        if (removeRes.status == 500) return res.status(500).json(removeRes);
+      }
+
+      const uploadRes = await axios.post(
+        `http://localhost:${mediaPort}/media/upload`,
+        req.file
+      );
+
+      if (uploadRes.status == 500) return res.status(500).json(uploadRes);
+
+      post.imageUrl = uploadRes.data.data.secure_url;
+      post.cloudinaryId = uploadRes.data.data.public_id;
+    }
+
+    // add caption if provided
+    if (caption) post.caption = caption;
+
+    // update the post
+    const updatedPost = await Post.findByIdAndUpdate(id, post, { new: true });
+
+    res.status(200).json({
+      success: true,
+      message: "Post updated successfully",
+      data: updatedPost,
+    });
   } catch (error) {
     res
       .status(500)
@@ -110,7 +171,38 @@ const updatePost = async (req, res) => {
 
 const deletePost = async (req, res) => {
   try {
-    // res.status(200).json({ success: true, message: "" });
+    const { id } = req.params;
+
+    // validate postId
+    if (!mongoose.Types.ObjectId.isValid(id))
+      return res
+        .status(404)
+        .json({ success: false, message: "Invalid post id" });
+
+    let post = await Post.findById(id);
+
+    // if no post found
+    if (!post)
+      return res
+        .status(404)
+        .json({ success: false, message: "No post with given id" });
+
+    if (post.creator.toString() !== req.userId)
+      return res
+        .status(401)
+        .json({ success: false, message: "Cannot update this post" });
+
+    // delete the comments
+    post.comments.map((commentId) => {
+      await Comment.findByIdAndDelete(commentId);
+    });
+
+    // delete the post
+    await Post.findByIdAndDelete(id);
+
+    res
+      .status(200)
+      .json({ success: true, message: "Post deleted successfully" });
   } catch (error) {
     res
       .status(500)
