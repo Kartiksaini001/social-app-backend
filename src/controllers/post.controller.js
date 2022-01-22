@@ -3,7 +3,21 @@ const Post = require("../models/post");
 
 const fetchAllPosts = async (req, res) => {
   try {
-    // res.status(200).json({ success: true, message: "" });
+    const page = req.query.page ? req.query.page : 1;
+    const limit = req.query.perPage ? req.query.perPage : 20;
+    const skip = limit * (page - 1);
+
+    // fetch posts
+    const posts = await Post.find()
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .skip(skip);
+
+    res.status(200).json({
+      success: true,
+      message: "Posts fetched successfully",
+      data: posts,
+    });
   } catch (error) {
     res
       .status(500)
