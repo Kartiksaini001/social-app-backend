@@ -171,7 +171,45 @@ const updateComment = async (req, res) => {
 
 const deleteComment = async (req, res) => {
   try {
-    // res.status(200).json({ success: true, message: "" });
+    const { postId, commentId } = req.params;
+
+    // validate postId
+    if (!mongoose.Types.ObjectId.isValid(postId))
+      return res
+        .status(404)
+        .json({ success: false, message: "Invalid post id" });
+
+    // validate commentId
+    if (!mongoose.Types.ObjectId.isValid(commentId))
+      return res
+        .status(404)
+        .json({ success: false, message: "Invalid comment id" });
+
+    const post = await Post.findById(postId);
+
+    // check if post contains comment with id commentId
+    if (!post.comments.includes(mongoose.Types.ObjectId(commentId)))
+      return res.status(404).json({
+        success: false,
+        message: "Comment with given id not found in that post",
+      });
+
+    const comment = await Comment.findById(commentId);
+
+    // check if current user is the author of that comment
+    if (comment.author.toString() !== req.userId)
+      return res.status(401).json({
+        success: false,
+        message: "Cannot delete that comment",
+      });
+
+    // delete the comment
+    await Comment.findByIdAndDelete(commentId);
+
+    res.status(200).json({
+      success: true,
+      message: "Comment deleted successfully",
+    });
   } catch (error) {
     res
       .status(500)
