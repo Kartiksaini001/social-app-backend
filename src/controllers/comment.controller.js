@@ -95,7 +95,7 @@ const fetchComment = async (req, res) => {
         .json({ success: false, message: "Invalid comment id" });
 
     // fetch the comment
-    const comment = await Comment.findById(commentId);
+    const comment = await Comment.findById(commentId).populate("replies");
 
     res.status(200).json({
       success: true,
@@ -206,6 +206,11 @@ const deleteComment = async (req, res) => {
     // delete the comment
     await Comment.findByIdAndDelete(commentId);
 
+    // remove the commentId from post comments list
+    post.comments = post.comments.filter((id) => id.toString() !== commentId);
+
+    await Post.findByIdAndUpdate(postId, post);
+
     res.status(200).json({
       success: true,
       message: "Comment deleted successfully",
@@ -219,7 +224,50 @@ const deleteComment = async (req, res) => {
 
 const replyToComment = async (req, res) => {
   try {
-    // res.status(200).json({ success: true, message: "" });
+    const { postId, commentId } = req.params;
+
+    // validate postId
+    if (!mongoose.Types.ObjectId.isValid(postId))
+      return res
+        .status(404)
+        .json({ success: false, message: "Invalid post id" });
+
+    // validate commentId
+    if (!mongoose.Types.ObjectId.isValid(commentId))
+      return res
+        .status(404)
+        .json({ success: false, message: "Invalid comment id" });
+
+    const post = await Post.findById(postId);
+
+    // check if post contains comment with id commentId
+    if (!post.comments.includes(mongoose.Types.ObjectId(commentId)))
+      return res.status(404).json({
+        success: false,
+        message: "Comment with given id not found in that post",
+      });
+
+    const { content } = req.body;
+
+    if (!content)
+      return res
+        .status(400)
+        .json({ success: false, message: "Comment cannot be empty" });
+
+    const newReply = new Comment({ content, author: req.userId });
+    await newReply.save();
+
+    const comment = await Comment.findById(commentId);
+    comment.replies.unshift(newReply._id);
+
+    // update the comment
+    await Comment.findByIdAndUpdate(commentId, comment);
+
+    res.status(200).json({
+      success: true,
+      message: "Reply added successfully",
+      data: newReply,
+    });
   } catch (error) {
     res
       .status(500)
