@@ -302,8 +302,8 @@ const updatePassword = async (req, res) => {
 
 const getFriends = async (req, res) => {
   try {
-    const page = req.params.page ? req.params.page : 1;
-    const limit = req.params.perPage ? req.params.perPage : 20;
+    const page = req.query.page ? req.query.page : 1;
+    const limit = req.query.perPage ? req.query.perPage : 20;
     const skip = limit * (page - 1);
     const user = await User.findById(req.userId)
       .populate({
@@ -327,8 +327,8 @@ const getFriends = async (req, res) => {
 
 const getFriendRequests = async (req, res) => {
   try {
-    const page = req.params.page ? req.params.page : 1;
-    const limit = req.params.perPage ? req.params.perPage : 20;
+    const page = req.query.page ? req.query.page : 1;
+    const limit = req.query.perPage ? req.query.perPage : 20;
     const skip = limit * (page - 1);
     const user = await User.findById(req.userId)
       .populate({
@@ -352,8 +352,8 @@ const getFriendRequests = async (req, res) => {
 
 const getFriendRequestsSent = async (req, res) => {
   try {
-    const page = req.params.page ? req.params.page : 1;
-    const limit = req.params.perPage ? req.params.perPage : 20;
+    const page = req.query.page ? req.query.page : 1;
+    const limit = req.query.perPage ? req.query.perPage : 20;
     const skip = limit * (page - 1);
     const user = await User.findById(req.userId)
       .populate({
@@ -377,8 +377,8 @@ const getFriendRequestsSent = async (req, res) => {
 
 const getBlockedUsers = async (req, res) => {
   try {
-    const page = req.params.page ? req.params.page : 1;
-    const limit = req.params.perPage ? req.params.perPage : 20;
+    const page = req.query.page ? req.query.page : 1;
+    const limit = req.query.perPage ? req.query.perPage : 20;
     const skip = limit * (page - 1);
     const user = await User.findById(req.userId)
       .populate({

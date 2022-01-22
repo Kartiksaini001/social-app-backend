@@ -5,7 +5,27 @@ const { findByIdAndUpdate } = require("../models/post");
 
 const fetchAllComments = async (req, res) => {
   try {
-    // res.status(200).json({ success: true, message: "" });
+    const page = req.query.page ? req.query.page : 1;
+    const limit = req.query.perPage ? req.query.perPage : 20;
+    const skip = limit * (page - 1);
+    const { postId } = req.params;
+
+    // validate postId
+    if (!mongoose.Types.ObjectId.isValid(postId))
+      return res
+        .status(404)
+        .json({ success: false, message: "Invalid post id" });
+
+    // fetch comments
+    const { comments } = await Post.findById(postId)
+      .populate("comments")
+      .slice("comments", [skip, limit]);
+
+    res.status(200).json({
+      success: true,
+      message: "Comments fetched successfully",
+      data: comments,
+    });
   } catch (error) {
     res
       .status(500)
