@@ -31,6 +31,7 @@ app.get("/ping", (req, res) => {
 });
 
 app.use("/users", routes.userRoutes);
+app.use("/posts", routes.postRoutes);
 app.use("/login", routes.loginRoutes);
 
 app.all("*", (req, res) => {

@@ -13,6 +13,7 @@ const {
   suggestFriends,
   uploadProfilePic,
   removeProfilePic,
+  getFeed,
   signup,
   getUser,
   updateUser,
@@ -36,6 +37,7 @@ router.post("/block/:blockUserId", auth, blockUser);
 router.get("/suggestions", auth, suggestFriends);
 router.post("/profile", auth, upload.single("image"), uploadProfilePic);
 router.delete("/profile", auth, removeProfilePic);
+router.get("/feed", auth, getFeed);
 router.post("/signup", signup);
 router.post("/forgot_password", forgotPassword);
 router.post("/update_password/:token", updatePassword);

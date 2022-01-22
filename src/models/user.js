@@ -26,6 +26,7 @@ const userSchema = mongoose.Schema(
     college: { type: String, default: null },
     city: { type: String, default: null },
     cloudinaryId: { type: String, default: null },
+    sharedPosts: [{ type: mongoose.Schema.Types.ObjectId, ref: "Post" }],
   },
   {
     timestamps: true,

@@ -741,6 +741,16 @@ const removeProfilePic = async (req, res) => {
   }
 };
 
+const getFeed = async (req, res) => {
+  try {
+    // res.status(200).json({ success: true, message: "" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ success: false, message: "Something Went Wrong..." });
+  }
+};
+
 module.exports = {
   getUsers,
   signup,
@@ -761,4 +771,5 @@ module.exports = {
   suggestFriends,
   uploadProfilePic,
   removeProfilePic,
+  getFeed,
 };
